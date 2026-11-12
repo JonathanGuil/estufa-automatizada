@@ -1,0 +1,47 @@
+# Ambiente de HOMOLOGAÇÃO: valida versões novas antes de promover.
+# DEVICE_ID diferente do real (estufa01-sim) -> NUNCA reconfigura a estufa de verdade.
+# Alimente-o com o CSV histórico (make/tools import_csv) ou publicando em tópicos -sim.
+name: estufa-hml
+
+networks:
+  estufa_net:
+    external: true
+
+volumes:
+  pgdata_hml:
+
+services:
+  postgres-hml:
+    image: postgres:16-alpine
+    container_name: postgres-hml
+    restart: unless-stopped
+    mem_limit: 256m
+    command: ["postgres","-c","shared_buffers=64MB","-c","max_connections=20","-c","effective_cache_size=128MB"]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata_hml:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [estufa_net]
+
+  backend-hml:
+    image: estufa-backend:latest
+    container_name: backend-hml
+    restart: unless-stopped
+    mem_limit: 256m
+    env_file: ./env/.env.hml
+    depends_on:
+      postgres-hml:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL","python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks: [estufa_net]

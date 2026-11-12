@@ -1,0 +1,29 @@
+# ---- Segredos: nunca versionar ----
+# valores reais ficam so na VM / no PC; os modelos *.example vao para o Git
+infra/env/.env.*
+!infra/env/.env.*.example
+.env
+infra/mosquitto/passwd*
+infra/mosquitto/certs/
+firmware/**/secrets.h
+
+# ---- Dados e backups (contem dados do experimento e, as vezes, segredos) ----
+backups/
+*.sql
+*.sql.gz
+*.csv
+*.tgz
+*.zip
+
+# ---- Python ----
+**/__pycache__/
+*.pyc
+.venv/
+*.log
+
+# ---- Editor / sistema ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini

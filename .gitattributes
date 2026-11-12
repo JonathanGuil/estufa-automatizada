@@ -1,0 +1,6 @@
+# Mantem LF em todos os arquivos de texto, inclusive num clone no Windows.
+# Sem isso o Git para Windows pode converter os .sh para CRLF e eles quebram na VM.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.pdf binary

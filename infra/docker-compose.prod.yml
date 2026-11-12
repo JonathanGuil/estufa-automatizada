@@ -1,0 +1,45 @@
+# Ambiente de PRODUÇÃO: recebe a telemetria real do ESP32.
+name: estufa-prod
+
+networks:
+  estufa_net:
+    external: true
+
+volumes:
+  pgdata_prod:
+
+services:
+  postgres-prod:
+    image: postgres:16-alpine
+    container_name: postgres-prod
+    restart: unless-stopped
+    mem_limit: 320m
+    command: ["postgres","-c","shared_buffers=96MB","-c","max_connections=30","-c","effective_cache_size=256MB"]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [estufa_net]
+
+  backend-prod:
+    image: estufa-backend:latest      # construído por: make build
+    container_name: backend-prod
+    restart: unless-stopped
+    mem_limit: 320m
+    env_file: ./env/.env.prod
+    depends_on:
+      postgres-prod:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL","python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks: [estufa_net]

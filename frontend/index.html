@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Estufa - Painel</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231d7448' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z'/%3E%3Cpath d='M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&display=swap"
+    />
+    <link rel="stylesheet" href="css/painel.css?v=20261025b" />
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="i-leaf" viewBox="0 0 24 24">
+        <path
+          d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"
+        />
+        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
+      </symbol>
+      <symbol id="i-grid" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </symbol>
+      <symbol id="i-therm" viewBox="0 0 24 24">
+        <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z" />
+      </symbol>
+      <symbol id="i-drop" viewBox="0 0 24 24">
+        <path
+          d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"
+        />
+      </symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4" />
+        <path
+          d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+        />
+      </symbol>
+      <symbol id="i-list" viewBox="0 0 24 24">
+        <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+      </symbol>
+      <symbol id="i-wind" viewBox="0 0 24 24">
+        <path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2" />
+        <path d="M9.6 4.6A2 2 0 1 1 11 8H2" />
+        <path d="M12.6 19.4A2 2 0 1 0 14 16H2" />
+      </symbol>
+      <symbol id="i-up" viewBox="0 0 24 24">
+        <path d="m5 9 7-7 7 7" />
+        <path d="M12 16V2" />
+        <circle cx="12" cy="21" r="1" />
+      </symbol>
+      <symbol id="i-flame" viewBox="0 0 24 24">
+        <path
+          d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"
+        />
+      </symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 8v4M12 16h.01" />
+      </symbol>
+      <symbol id="i-user" viewBox="0 0 24 24">
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21a8 8 0 0 1 16 0" />
+      </symbol>
+      <symbol id="i-out" viewBox="0 0 24 24">
+        <path
+          d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"
+        />
+      </symbol>
+    </svg>
+
+    <div id="login" hidden>
+      <form class="login-card" id="loginForm" novalidate>
+        <div class="brand">
+          <svg class="ico"><use href="#i-leaf" /></svg>
+          Estufa Automatizada
+        </div>
+        <p>Entre para ver a telemetria e ajustar os parâmetros.</p>
+        <div class="field">
+          <label for="u">Usuário</label>
+          <input id="u" autocomplete="username" autofocus />
+        </div>
+        <div class="field">
+          <label for="s">Senha</label>
+          <input id="s" type="password" autocomplete="current-password" />
+        </div>
+        <button class="btn" id="entrar" type="submit">Entrar</button>
+        <p class="aviso" id="loginAviso" role="status" hidden></p>
+        <p class="erro" id="loginErro" role="alert"></p>
+        <button class="linkbtn" id="esqueciLink" type="button">
+          Esqueci minha senha
+        </button>
+      </form>
+
+      <form class="login-card" id="esqueciForm" novalidate hidden>
+        <div class="brand">
+          <svg class="ico"><use href="#i-leaf" /></svg>
+          Estufa Automatizada
+        </div>
+        <h2>Esqueci minha senha</h2>
+        <p>
+          Digite o e-mail cadastrado na conta. Vamos mandar um link para você
+          criar uma senha nova.
+        </p>
+        <div class="field">
+          <label for="esqEmail">E-mail</label>
+          <input id="esqEmail" type="email" autocomplete="email" />
+        </div>
+        <button class="btn" id="esqEnviar" type="submit">Enviar link</button>
+        <p class="erro" id="esqMsg" role="status"></p>
+        <button class="linkbtn" type="button" data-voltar-login>
+          Voltar para o login
+        </button>
+      </form>
+
+      <form class="login-card" id="redefinirForm" novalidate hidden>
+        <div class="brand">
+          <svg class="ico"><use href="#i-leaf" /></svg>
+          Estufa Automatizada
+        </div>
+        <h2>Criar senha nova</h2>
+        <p>Use pelo menos 8 caracteres.</p>
+        <div class="field">
+          <label for="redNova">Senha nova</label>
+          <input id="redNova" type="password" autocomplete="new-password" />
+        </div>
+        <div class="field">
+          <label for="redNova2">Repita a senha</label>
+          <input id="redNova2" type="password" autocomplete="new-password" />
+        </div>
+        <button class="btn" id="redSalvar" type="submit">Salvar senha</button>
+        <p class="erro" id="redMsg" role="alert"></p>
+        <button class="linkbtn" type="button" data-voltar-login>
+          Voltar para o login
+        </button>
+      </form>
+    </div>
+
+    <div id="app" class="shell" hidden>
+      <aside class="rail">
+        <div class="brand">
+          <svg class="ico"><use href="#i-leaf" /></svg>
+          <span class="nome">Estufa</span>
+          <span class="env" id="envTag">—</span>
+        </div>
+        <nav aria-label="Seções">
+          <button data-view="geral">
+            <svg class="ico"><use href="#i-grid" /></svg>
+            <span class="lbl">Visão geral</span>
+          </button>
+          <button data-view="clima">
+            <svg class="ico"><use href="#i-therm" /></svg>
+            <span class="lbl">Clima</span>
+            <span class="badge" data-badge="clima" hidden></span>
+          </button>
+          <button data-view="irrigacao">
+            <svg class="ico"><use href="#i-drop" /></svg>
+            <span class="lbl">Irrigação</span>
+            <span class="badge" data-badge="irrigacao" hidden></span>
+          </button>
+          <button data-view="luz">
+            <svg class="ico"><use href="#i-sun" /></svg>
+            <span class="lbl">Iluminação</span>
+            <span class="badge" data-badge="luz" hidden></span>
+          </button>
+          <button data-view="registro">
+            <svg class="ico"><use href="#i-list" /></svg>
+            <span class="lbl">Registro</span>
+          </button>
+          <button data-view="conta">
+            <svg class="ico"><use href="#i-user" /></svg>
+            <span class="lbl">Conta</span>
+          </button>
+        </nav>
+        <div class="foot">
+          <div class="status" aria-live="polite">
+            <span class="dot" id="dot"></span>
+            <span id="statusTxt">conectando…</span>
+          </div>
+          <button class="btn-s" id="sair" type="button" title="Sair">
+            <svg class="ico" style="width: 15px; height: 15px">
+              <use href="#i-out" />
+            </svg>
+            <span>Sair</span>
+          </button>
+        </div>
+      </aside>
+
+      <main>
+        <div class="top">
+          <h1 id="viewTitle">Visão geral</h1>
+          <span class="meta" id="ultTs">—</span>
+        </div>
+        <div class="banner" id="offBanner" hidden>
+          <svg class="ico"><use href="#i-alert" /></svg>
+          <span id="offTxt"></span>
+        </div>
+        <div class="banner warn" id="alertBanner" hidden>
+          <svg class="ico"><use href="#i-alert" /></svg>
+          <ul id="alertLista"></ul>
+          <button
+            class="btn-s"
+            id="alertOk"
+            type="button"
+            title="Ocultar até surgir um alerta novo"
+          >
+            Ok
+          </button>
+        </div>
+
+        <section id="view-geral" data-title="Visão geral">
+          <div class="sys">
+            <article class="card">
+              <div class="card-h">
+                <h2>
+                  <svg class="ico"><use href="#i-therm" /></svg>
+                  Clima
+                </h2>
+                <button class="linkbtn" data-go="clima">Ajustar</button>
+              </div>
+              <div>
+                <div class="val">
+                  <span id="temp">--</span><small>°C</small>
+                </div>
+                <div id="tempScale"></div>
+              </div>
+              <div class="acts" data-acts="aquec,vent,exaus"></div>
+            </article>
+            <article class="card">
+              <div class="card-h">
+                <h2>
+                  <svg class="ico"><use href="#i-drop" /></svg>
+                  Irrigação
+                </h2>
+                <button class="linkbtn" data-go="irrigacao">Ajustar</button>
+              </div>
+              <div class="two">
+                <div>
+                  <div class="zl">Zona 1</div>
+                  <div class="zv">
+                    <span id="u1">--</span><small>ADC</small>
+                  </div>
+                  <div class="sub">corrigida <b id="ucr1">--</b></div>
+                  <div id="u1Scale"></div>
+                </div>
+                <div>
+                  <div class="zl">Zona 2</div>
+                  <div class="zv">
+                    <span id="u2">--</span><small>ADC</small>
+                  </div>
+                  <div class="sub">corrigida <b id="ucr2">--</b></div>
+                  <div id="u2Scale"></div>
+                </div>
+              </div>
+              <div class="acts" data-acts="valv1,valv2"></div>
+            </article>
+            <article class="card">
+              <div class="card-h">
+                <h2>
+                  <svg class="ico"><use href="#i-sun" /></svg>
+                  Iluminação
+                </h2>
+                <button class="linkbtn" data-go="luz">Ajustar</button>
+              </div>
+              <div id="fotoResumo"></div>
+              <div class="acts" data-acts="led"></div>
+            </article>
+          </div>
+
+          <article class="card chartcard">
+            <div class="card-h">
+              <h2>Últimas 24 horas</h2>
+              <div class="legend" id="legGantt"></div>
+            </div>
+            <div id="g-geral"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-h">
+              <h2>Eventos recentes</h2>
+              <button class="linkbtn" data-go="registro">
+                Ver registro completo
+              </button>
+            </div>
+            <div class="evlist" id="evResumo"></div>
+          </article>
+        </section>
+
+        <section id="view-clima" data-title="Clima" hidden>
+          <div class="split">
+            <div class="stack">
+              <article class="card">
+                <div class="card-h">
+                  <h2>Temperatura e atuadores</h2>
+                  <div class="toolbar">
+                    <span class="seg" data-periodo></span>
+                  </div>
+                </div>
+                <div id="g-clima"></div>
+              </article>
+              <article class="card">
+                <div class="card-h">
+                  <h2>Parâmetros de clima</h2>
+                  <span class="cfgmeta" data-cfgmeta></span>
+                </div>
+                <div class="form" data-cfgform>
+                  <fieldset>
+                    <legend>Aquecedor</legend>
+                    <div class="rowf four">
+                      <div class="in">
+                        <label for="aq_ld">Liga · dia</label>
+                        <div class="u">
+                          <input id="aq_ld" type="number" step="0.1" />
+                          <span>°C</span>
+                        </div>
+                      </div>
+                      <div class="in">
+                        <label for="aq_dd">Desliga · dia</label>
+                        <div class="u">
+                          <input id="aq_dd" type="number" step="0.1" />
+                          <span>°C</span>
+                        </div>
+                      </div>
+                      <div class="in">
+                        <label for="aq_ln">Liga · noite</label>
+                        <div class="u">
+                          <input id="aq_ln" type="number" step="0.1" />
+                          <span>°C</span>
+                        </div>
+                      </div>
+                      <div class="in">
+                        <label for="aq_dn">Desliga · noite</label>
+                        <div class="u">
+                          <input id="aq_dn" type="number" step="0.1" />
+                          <span>°C</span>
+                        </div>
+                      </div>
+                    </div>
+                    <p class="hint">
+                      Liga abaixo do primeiro valor e desliga ao atingir o
+                      segundo.
+                    </p>
+                  </fieldset>
+                  <fieldset>
+                    <legend>Ventilador</legend>
+                    <div class="rowf four">
+                      <div class="in">
+                        <label for="ve_ld">Liga · dia</label>
+                        <div class="u">
+                          <input id="ve_ld" type="number" step="0.1" />
+                          <span>°C</span>
+                        </div>
+                      </div>
+                      <div class="in">
+                        <label for="ve_dd">Desliga · dia</label>
+                        <div class="u">
+                          <input id="ve_dd" type="number" step="0.1" />
+                          <span>°C</span>
+                        </div>
+                      </div>
+                      <div class="in">
+                        <label for="ve_ln">Liga · noite</label>
+                        <div class="u">
+                          <input id="ve_ln" type="number" step="0.1" />
+                          <span>°C</span>
+                        </div>
+                      </div>
+                      <div class="in">
+                        <label for="ve_dn">Desliga · noite</label>
+                        <div class="u">
+                          <input id="ve_dn" type="number" step="0.1" />
+                          <span>°C</span>
+                        </div>
+                      </div>
+                    </div>
+                    <p class="hint">
+                      Liga acima do primeiro valor e desliga ao cair abaixo do
+                      segundo.
+                    </p>
+                  </fieldset>
+                  <fieldset>
+                    <legend>Exaustor</legend>
+                    <div class="rowf four">
+                      <div class="in">
+                        <label for="ex_ld">Liga · dia</label>
+                        <div class="u">
+                          <input id="ex_ld" type="number" step="0.1" />
+                          <span>°C</span>
+                        </div>
+                      </div>
+                      <div class="in">
+                        <label for="ex_dd">Desliga · dia</label>
+                        <div class="u">
+                          <input id="ex_dd" type="number" step="0.1" />
+                          <span>°C</span>
+                        </div>
+                      </div>
+                      <div class="in">
+                        <label for="ex_ln">Liga · noite</label>
+                        <div class="u">
+                          <input id="ex_ln" type="number" step="0.1" />
+                          <span>°C</span>
+                        </div>
+                      </div>
+                      <div class="in">
+                        <label for="ex_dn">Desliga · noite</label>
+                        <div class="u">
+                          <input id="ex_dn" type="number" step="0.1" />
+                          <span>°C</span>
+                        </div>
+                      </div>
+                    </div>
+                  </fieldset>
+                  <fieldset>
+                    <legend>Circulação e polinização</legend>
+                    <label class="check">
+                      <input id="ci_en" type="checkbox" />
+                      Pulsar o ventilador em ciclos, independente da temperatura
+                    </label>
+                    <div class="rowf four" style="margin-top: 10px">
+                      <div class="in">
+                        <label for="ci_ini">Janela · início</label>
+                        <div class="u">
+                          <input id="ci_ini" type="number" min="0" max="23" />
+                          <span>h</span>
+                        </div>
+                      </div>
+                      <div class="in">
+                        <label for="ci_fim">Janela · fim</label>
+                        <div class="u">
+                          <input id="ci_fim" type="number" min="0" max="24" />
+                          <span>h</span>
+                        </div>
+                      </div>
+                      <div class="in">
+                        <label for="ci_on">Ligado</label>
+                        <div class="u">
+                          <input
+                            id="ci_on"
+                            type="number"
+                            step="0.1"
+                            min="0.1"
+                          />
+                          <span>min</span>
+                        </div>
+                      </div>
+                      <div class="in">
+                        <label for="ci_off">Desligado</label>
+                        <div class="u">
+                          <input
+                            id="ci_off"
+                            type="number"
+                            step="0.1"
+                            min="0.1"
+                          />
+                          <span>min</span>
+                        </div>
+                      </div>
+                    </div>
+                    <label class="check" style="margin-top: 8px">
+                      <input id="ci_ex" type="checkbox" />
+                      Acionar o exaustor junto no mesmo pulso
+                    </label>
+                  </fieldset>
+                  <div class="savebar">
+                    <button class="btn" data-salvar>Salvar parâmetros</button>
+                    <span class="msg" data-cfgmsg></span>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <article class="card">
+              <div class="card-h"><h2>Controle</h2></div>
+              <div class="acts" data-acts="aquec,vent,exaus"></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="view-irrigacao" data-title="Irrigação" hidden>
+          <div class="split">
+            <div class="stack">
+              <article class="card">
+                <div class="card-h">
+                  <h2>Umidade do solo e válvulas</h2>
+                  <div class="toolbar">
+                    <span class="seg" data-periodo></span>
+                  </div>
+                </div>
+                <div id="g-irrigacao"></div>
+              </article>
+              <article class="card">
+                <div class="card-h">
+                  <h2>Parâmetros de irrigação</h2>
+                  <span class="cfgmeta" data-cfgmeta></span>
+                </div>
+                <div class="form">
+                  <div class="two">
+                    <fieldset>
+                      <legend>Zona 1</legend>
+                      <div class="rowf">
+                        <div class="in">
+                          <label for="ir_dose1">Dose</label>
+                          <div class="u">
+                            <input id="ir_dose1" type="number" />
+                            <span>mL</span>
+                          </div>
+                        </div>
+                        <div class="in">
+                          <label for="ir_int1">Intervalo</label>
+                          <div class="u">
+                            <input id="ir_int1" type="number" />
+                            <span>h</span>
+                          </div>
+                        </div>
+                        <div class="in">
+                          <label for="z1_v">Vazão</label>
+                          <div class="u">
+                            <input id="z1_v" type="number" />
+                            <span>mL/min</span>
+                          </div>
+                        </div>
+                        <div class="in">
+                          <label for="z1_sat">Saturado</label>
+                          <div class="u">
+                            <input id="z1_sat" type="number" />
+                            <span>ADC</span>
+                          </div>
+                        </div>
+                      </div>
+                    </fieldset>
+                    <fieldset>
+                      <legend>Zona 2</legend>
+                      <div class="rowf">
+                        <div class="in">
+                          <label for="ir_dose2">Dose</label>
+                          <div class="u">
+                            <input id="ir_dose2" type="number" />
+                            <span>mL</span>
+                          </div>
+                        </div>
+                        <div class="in">
+                          <label for="ir_int2">Intervalo</label>
+                          <div class="u">
+                            <input id="ir_int2" type="number" />
+                            <span>h</span>
+                          </div>
+                        </div>
+                        <div class="in">
+                          <label for="z2_v">Vazão</label>
+                          <div class="u">
+                            <input id="z2_v" type="number" />
+                            <span>mL/min</span>
+                          </div>
+                        </div>
+                        <div class="in">
+                          <label for="z2_sat">Saturado</label>
+                          <div class="u">
+                            <input id="z2_sat" type="number" />
+                            <span>ADC</span>
+                          </div>
+                        </div>
+                      </div>
+                    </fieldset>
+                  </div>
+                  <fieldset>
+                    <legend>Regras</legend>
+                    <label class="check">
+                      <input id="ir_superv" type="checkbox" />
+                      Pular a dose se o solo já estiver úmido (pelo limiar de
+                      saturado)
+                    </label>
+                    <label class="check" style="margin-top: 6px">
+                      <input id="ir_reinicia" type="checkbox" />
+                      Dose manual reinicia o intervalo agendado
+                    </label>
+                  </fieldset>
+                  <div class="savebar">
+                    <button class="btn" data-salvar>Salvar parâmetros</button>
+                    <span class="msg" data-cfgmsg></span>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <article class="card">
+              <div class="card-h"><h2>Controle</h2></div>
+              <div class="acts" data-acts="valv1,valv2"></div>
+              <p class="hint" style="margin-top: 10px">
+                Válvula em manual corta sozinha em 5 min (segurança da
+                firmware).
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section id="view-luz" data-title="Iluminação" hidden>
+          <div class="split">
+            <div class="stack">
+              <article class="card">
+                <div class="card-h">
+                  <h2>Iluminação</h2>
+                  <div class="toolbar">
+                    <span class="seg" data-periodo></span>
+                  </div>
+                </div>
+                <div id="g-luz"></div>
+              </article>
+              <article class="card">
+                <div class="card-h">
+                  <h2>Fotoperíodo</h2>
+                  <span class="cfgmeta" data-cfgmeta></span>
+                </div>
+                <div class="form">
+                  <div class="rowf" style="max-width: 420px">
+                    <div class="in">
+                      <label for="fp_on">Liga às</label>
+                      <div class="u">
+                        <input id="fp_on" type="number" min="0" max="23" />
+                        <span>h</span>
+                      </div>
+                    </div>
+                    <div class="in">
+                      <label for="fp_off">Desliga às</label>
+                      <div class="u">
+                        <input id="fp_off" type="number" min="0" max="23" />
+                        <span>h</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="fotoPreview"></div>
+                  <div class="savebar">
+                    <button class="btn" data-salvar>Salvar parâmetros</button>
+                    <span class="msg" data-cfgmsg></span>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <article class="card">
+              <div class="card-h"><h2>Controle</h2></div>
+              <div class="acts" data-acts="led"></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="view-registro" data-title="Registro" hidden>
+          <article class="card chartcard">
+            <div class="card-h">
+              <h2>Tudo no mesmo eixo de tempo</h2>
+              <div class="toolbar">
+                <span class="seg" data-periodo></span>
+                <select id="hZona" aria-label="Zona">
+                  <option value="todas">Zonas 1 e 2</option>
+                  <option value="1">Só zona 1</option>
+                  <option value="2">Só zona 2</option>
+                </select>
+              </div>
+            </div>
+            <div class="legend" id="legReg" style="margin-bottom: 8px"></div>
+            <div id="g-registro"></div>
+          </article>
+          <article class="card">
+            <div class="card-h">
+              <h2>Eventos</h2>
+              <div class="evtools">
+                <span class="evcount" id="evCount"></span>
+                <span
+                  class="seg"
+                  id="evFiltro"
+                  role="group"
+                  aria-label="Filtrar eventos"
+                ></span>
+              </div>
+            </div>
+            <div class="tblwrap">
+              <table class="tbl">
+                <colgroup>
+                  <col class="c-h" />
+                  <col class="c-a" />
+                  <col />
+                  <col class="c-d" />
+                  <col class="c-o" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th scope="col">Horário</th>
+                    <th scope="col">Atuador</th>
+                    <th scope="col">O que aconteceu</th>
+                    <th scope="col" class="r">Duração</th>
+                    <th scope="col">Origem</th>
+                  </tr>
+                </thead>
+                <tbody id="eventos"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section id="view-conta" data-title="Conta" hidden>
+          <div class="banner warn" id="ctSemEnvio" hidden>
+            <svg class="ico"><use href="#i-alert" /></svg>
+            <span>
+              O envio de e-mail não está configurado neste ambiente: os alertas
+              e o "Esqueci minha senha" ficam desligados.
+            </span>
+          </div>
+          <div class="conta">
+            <article class="card">
+              <div class="card-h"><h2>E-mail</h2></div>
+              <form class="form" id="formEmail" novalidate>
+                <p class="hint">
+                  Recebe os alertas da estufa e o link de "Esqueci minha senha".
+                </p>
+                <div class="field">
+                  <label for="ctEmail">E-mail</label>
+                  <input id="ctEmail" type="email" autocomplete="email" />
+                </div>
+                <div class="field">
+                  <label for="ctEmailSenha">Senha atual</label>
+                  <input
+                    id="ctEmailSenha"
+                    type="password"
+                    autocomplete="current-password"
+                  />
+                </div>
+                <div class="savebar">
+                  <button class="btn" type="submit">Salvar e-mail</button>
+                  <button class="btn ghost" id="ctTeste" type="button">
+                    Enviar e-mail de teste
+                  </button>
+                  <span class="msg" id="ctEmailMsg"></span>
+                </div>
+              </form>
+            </article>
+            <article class="card">
+              <div class="card-h">
+                <h2>Senha</h2>
+                <span class="cfgmeta" id="ctUsuario"></span>
+              </div>
+              <form class="form" id="formSenha" novalidate>
+                <div class="field">
+                  <label for="ctAtual">Senha atual</label>
+                  <input
+                    id="ctAtual"
+                    type="password"
+                    autocomplete="current-password"
+                  />
+                </div>
+                <div class="field">
+                  <label for="ctNova">Senha nova</label>
+                  <input
+                    id="ctNova"
+                    type="password"
+                    autocomplete="new-password"
+                  />
+                </div>
+                <div class="field">
+                  <label for="ctNova2">Repita a senha nova</label>
+                  <input
+                    id="ctNova2"
+                    type="password"
+                    autocomplete="new-password"
+                  />
+                </div>
+                <p class="hint">
+                  Pelo menos 8 caracteres. Ao trocar, as outras sessões abertas
+                  são encerradas.
+                </p>
+                <div class="savebar">
+                  <button class="btn" type="submit">Trocar senha</button>
+                  <span class="msg" id="ctSenhaMsg"></span>
+                </div>
+              </form>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="js/util.js?v=20261025b"></script>
+    <script src="js/atuadores.js?v=20261025b"></script>
+    <script src="js/leituras.js?v=20261025b"></script>
+    <script src="js/dados.js?v=20261025b"></script>
+    <script src="js/graficos.js?v=20261025b"></script>
+    <script src="js/eventos.js?v=20261025b"></script>
+    <script src="js/config.js?v=20261025b"></script>
+    <script src="js/navegacao.js?v=20261025b"></script>
+    <script src="js/conta.js?v=20261025b"></script>
+    <script src="js/alertas.js?v=20261025b"></script>
+    <script src="js/app.js?v=20261025b"></script>
+  </body>
+</html>

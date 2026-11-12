@@ -1,0 +1,28 @@
+{
+    # e-mail para os avisos do Let's Encrypt
+    email seu-email@univates.br
+}
+
+# ---- PRODUÇÃO ----
+estufa.IP_DA_VM.sslip.io {
+    encode gzip
+    handle /api/* {
+        reverse_proxy backend-prod:8000
+    }
+    handle {
+        root * /srv/frontend
+        file_server
+    }
+}
+
+# ---- HOMOLOGAÇÃO ----
+hml.IP_DA_VM.sslip.io {
+    encode gzip
+    handle /api/* {
+        reverse_proxy backend-hml:8000
+    }
+    handle {
+        root * /srv/frontend
+        file_server
+    }
+}

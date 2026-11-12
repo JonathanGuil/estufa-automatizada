@@ -1,0 +1,43 @@
+# Infra compartilhada: proxy reverso (Caddy) + broker MQTT (Mosquitto).
+# É o ponto fixo do sistema. O ESP32 conhece só o broker; o navegador, só o Caddy.
+name: estufa-infra
+
+networks:
+  estufa_net:
+    external: true          # criada uma vez: make net
+
+volumes:
+  caddy_data:
+  caddy_config:
+  mosquitto_data:
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    restart: unless-stopped
+    mem_limit: 128m
+    ports:
+      - "80:80"             # ACME (Let's Encrypt) + redireciono p/ HTTPS
+      - "443:443"           # dashboard (prod e hml por hostname)
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../frontend:/srv/frontend:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [estufa_net]
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: mosquitto
+    restart: unless-stopped
+    mem_limit: 64m
+    ports:
+      - "8883:8883"         # TLS, exposto p/ internet (ESP32). 1883 fica só interno.
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/acl:/mosquitto/config/acl:ro
+      - ./mosquitto/passwd:/mosquitto/config/passwd:ro
+      - ./mosquitto/certs:/mosquitto/certs:ro
+      - mosquitto_data:/mosquitto/data
+    networks: [estufa_net]

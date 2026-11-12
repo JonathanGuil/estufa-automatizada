@@ -1,0 +1,161 @@
+CONTRATO MQTT DA ESTUFA
+=======================
+
+Broker único (Mosquitto). Os tópicos são separados por device_id:
+- Produção: device_id = estufa01
+- Homologação: device_id = estufa01-sim (o ESP32 real não escuta esses tópicos)
+
+Autenticação obrigatória (usuário e senha). O ESP32 usa TLS na porta 8883, com a CA própria
+gravada no firmware (CA_CERT em mqtt.cpp, copiada de infra/mosquitto/certs/ca.crt). Os
+backends usam a porta interna 1883 (rede Docker, sem TLS).
+
+Do dispositivo para a VM
+------------------------
+
+- estufa/{id}/telemetria (qos: 0; retain: não): leituras e estado dos atuadores
+- estufa/{id}/evento (qos: 0; retain: não): mudanças de estado e ocorrências
+- estufa/{id}/online (qos: 1 no LWT, 0 no "1"; retain: sim): "0" offline (Last Will), "1" online
+- estufa/{id}/config/state (qos: 0; retain: sim): parâmetros em vigor (resposta ao config/set)
+
+O ESP32 publica em QoS 0, porque a biblioteca PubSubClient não publica em QoS maior. Para não
+perder dados, cada linha é gravada no log CSV do LittleFS (um arquivo por dia) e publicada; se a
+gravação falhar, a linha é publicada assim mesmo. Quando a conexão volta, o ESP32 reenvia, a
+partir da marca d'água, o que foi gravado enquanto estava desconectado, incluindo as linhas do
+mesmo segundo da marca. O backend descarta as repetidas pela impressão digital (fingerprint) de
+cada linha.
+
+telemetria (exemplo):
+    {
+      "ts": 1791810000,
+      "temp": 22.81,
+      "u1": 1132, "u2": 1456,
+      "uctrl1": 1100, "uctrl2": 1400,
+      "ucorr1": 1027, "ucorr2": 1327,
+      "atuadores": {"vent": 0, "aquec": 0, "exaus": 0, "led": 1, "valv1": 0, "valv2": 0,
+                    "manual": {"vent": 0, "aquec": 0, "exaus": 0, "led": 0, "valv1": 0, "valv2": 0}},
+      "origem": "periodico"
+    }
+ts é o epoch UTC da linha no log (o backend também aceita ISO-8601 e, sem ts, usa a hora de
+recepção). Leitura indisponível vai como null: temp com o sensor perdido, uctrl/ucorr
+antes da primeira janela de medição. Em atuadores, 1 = ligado; em manual, 1 = modo
+manual e 0 = automático. origem: periodico (registro periódico), janela (fim de uma
+janela de medição) ou manual (registro pedido no painel local).
+
+evento (exemplo):
+    { "ts": 1791810300, "tipo": "valv1",
+      "detalhe": {"temp": 22.9, "umid1": 1130, "umid2": 1450,
+                  "vent": 0, "aquec": 0, "exaus": 0, "led": 1, "valv1": 1, "valv2": 0,
+                  "manual": {"vent": 0, "aquec": 0, "exaus": 0, "led": 0, "valv1": 0, "valv2": 0}},
+      "origem": "logica" }
+Todo evento traz no detalhe as leituras e o estado de todos os atuadores naquele momento.
+
+Tipos:
+- vent, aquec, exaus, led, valv1, valv2: o atuador mudou de estado (o estado novo
+  está no detalhe);
+- boot, wifi_off, wifi_on, mqtt_on: eventos do sistema;
+- falha_aquec: temperatura caindo com o aquecedor ligado;
+- irrig_pulada: dose agendada pulada porque o solo já estava úmido;
+- salto_umid1, salto_umid2: variação impossível na leitura de controle (a zona fica
+  bloqueada por 10 min);
+- config: parâmetros alterados no painel local; config_set: parâmetros recebidos da nuvem;
+- comando: comando remoto aplicado;
+- dose_retomada: dose interrompida por um reinício, retomada pelo tempo que faltava;
+  dose_abandonada: dose interrompida que não foi completada (depois de duas retomadas);
+- log local: log_apagado (o dia mais antigo foi apagado, já enviado), log_descartado (o
+  dia mais antigo foi apagado antes de ser enviado), log_falha (não conseguiu apagar),
+  log_cheio (a gravação falhou; as linhas seguem só pelo MQTT), log_normalizado (voltou a
+  gravar) e log_quase_cheio (partição acima de 85%).
+
+Alguns eventos trazem campos a mais no detalhe: arquivo (ex.: "20261022.csv") nos eventos
+de log, uso_pct no log_quase_cheio, zona e falta_s nos de dose e fw (versão do
+firmware) no boot. Esses campos só existem quando o evento é publicado na hora; no reenvio a
+partir do log eles não vão, porque o CSV não os guarda.
+
+origem: logica (decisão automática), manual, seguranca, sistema, nuvem ou retomada
+(válvula reaberta para completar uma dose interrompida).
+
+online (LWT):
+O ESP32 conecta com Last Will no tópico estufa/{id}/online, payload "0", retido. Logo depois
+de conectar, publica "1" retido. Assim o painel sabe na hora se o ESP32 caiu.
+
+Da VM para o dispositivo
+------------------------
+
+- estufa/{id}/config/set (qos: 1; retain: sim): parâmetros desejados (o painel publica aqui)
+- estufa/{id}/comando/set (qos: 1; retain: não): acionamento remoto: modo e liga/desliga por atuador
+
+Ao chegar em config/set, o ESP32 limita cada valor à sua faixa, aplica, grava em
+/config.json no LittleFS e republica os valores efetivos em config/state. Se nada mudou, a
+mensagem é ignorada. Como config/set é retido, um ESP32 que reinicia recebe a última
+configuração assim que reconecta.
+
+Formato dos parâmetros:
+Os setpoints térmicos são por período (dia/noite) e a irrigação é por zona (arrays [z1, z2]).
+Todo campo é opcional: o que não vier no JSON não muda no ESP32 (dá para mandar um setpoint só).
+    {
+      "fotoperiodo": { "liga_h": 6, "desliga_h": 21 },
+      "aquecedor":  { "liga_dia_c": 20.0, "desliga_dia_c": 22.0, "liga_noite_c": 13.5, "desliga_noite_c": 15.5 },
+      "ventilador": { "liga_dia_c": 28.0, "desliga_dia_c": 26.0, "liga_noite_c": 26.0, "desliga_noite_c": 24.0 },
+      "exaustor":   { "liga_dia_c": 31.0, "desliga_dia_c": 29.0, "liga_noite_c": 29.0, "desliga_noite_c": 27.0 },
+      "circulacao": { "habilitado": true, "hora_ini_h": 10, "hora_fim_h": 17, "liga_min": 5, "desliga_min": 25, "aciona_exaustor": false },
+      "irrigacao": {
+        "dose_ml": [200, 200],
+        "intervalo_h": [24, 24],
+        "vazao_ml_min": [70, 120],
+        "limiar_saturado_adc": [900, 900],
+        "supervisao_umidade": true,
+        "dose_manual_reinicia_intervalo": true
+      }
+    }
+Em config/state o ESP32 devolve todos esses blocos e acrescenta "versao": 2 (versão do
+formato do JSON).
+
+Faixas aplicadas pelo firmware: temperaturas de 0 a 50 °C; liga_h e desliga_h de 0 a 23;
+dose_ml de 1 a 5000; intervalo_h de 1 a 720; vazao_ml_min de 1 a 1000;
+limiar_saturado_adc de 0 a 4095.
+
+Observações:
+- dose_manual_reinicia_intervalo: com true, uma dose manual ("Dosar agora") reinicia a
+  contagem do agendamento; com false, a dose manual não mexe no ciclo e a próxima dose
+  automática segue no horário original.
+- Os limiares de umidade em ADC se aplicam à leitura de controle corrigida pela temperatura
+  (ucorr) e ainda são experimentais.
+- A validação das faixas fica no firmware. O backend valida só a estrutura (extra=allow) e
+  repassa o JSON; validar as faixas também na API é um próximo passo.
+- A resposta em config/state (retida) traz os valores efetivos, já limitados. É o que o painel
+  usa para mostrar o estado real do dispositivo.
+
+Acionamento remoto (comando/set)
+--------------------------------
+
+Permite ao painel mudar o modo de cada atuador (auto/manual) e ligar ou desligar os que estão
+em manual. Em modo auto o ESP32 continua decidindo sozinho, e config/set só altera parâmetros.
+
+Publicar sem retain: comando é uma ação pontual, não um estado. Se fosse retido, cada reconexão
+do ESP32 reaplicaria o último comando (por exemplo, reabrir uma válvula).
+
+Payload por atuador, com os ids do firmware (vent, aquec, exaus, led, valv1, valv2).
+Pode ser parcial: basta mandar os atuadores que mudam.
+    {
+      "vent":  { "modo": "manual", "ligado": true },
+      "aquec": { "modo": "auto" },
+      "valv1": { "modo": "manual", "ligado": false }
+    }
+- modo: "auto" ou "manual". Em auto, o atuador volta a seguir a lógica do ESP32.
+- ligado: só tem efeito quando o atuador está em manual.
+- O ESP32 aplica com as mesmas travas do painel local (corte da válvula após 5 min e
+  interrupção da janela de medição) e registra o evento comando (origem nuvem), cujo
+  detalhe traz o estado novo dos atuadores; o painel usa esse evento para atualizar a tela.
+
+Endpoint no backend: POST /api/comando (com login), que publica em comando/set.
+
+Circulação temporizada (bloco circulacao em config/set)
+-------------------------------------------------------
+
+Pulsa o ventilador numa janela de horário, independente da temperatura (ajuda na polinização e
+renova o ar). Soma-se ao controle térmico, não o substitui:
+    "circulacao": { "habilitado": true, "hora_ini_h": 10, "hora_fim_h": 17,
+                    "liga_min": 5, "desliga_min": 25, "aciona_exaustor": false }
+Faixas aplicadas pelo firmware: hora_ini_h de 0 a 23; hora_fim_h de 0 a 24; liga_min de
+0,1 a 60; desliga_min de 0,1 a 240. Com aciona_exaustor: true, o mesmo pulso liga também o
+exaustor.

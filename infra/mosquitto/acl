@@ -1,0 +1,12 @@
+# backend: acesso total (assina tudo, publica config/set + comando/set)
+user backend
+topic readwrite estufa/#
+
+# esp32: publica telemetria/evento/online/config-state; lê config/set + comando/set
+user esp32
+topic write estufa/+/telemetria
+topic write estufa/+/evento
+topic write estufa/+/online
+topic write estufa/+/config/state
+topic read estufa/+/config/set
+topic read estufa/+/comando/set

@@ -1,0 +1,74 @@
+FIRMWARE DO ESP32 (ESTUFA_V14)
+==============================
+
+O controle roda autônomo no ESP32: medir, decidir e acionar não dependem da VM. O MQTT
+espelha telemetria e eventos para a VM e recebe de volta parâmetros (config/set) e
+comandos manuais (comando/set). O painel HTTP local continua funcionando sem internet.
+Tópicos e formatos: ver ../MQTT_CONTRATO.txt.
+
+Compilar
+--------
+
+1. Abra estufa_v14/estufa_v14.ino no Arduino IDE, com a mesma placa e o mesmo esquema de
+   partição da gravação anterior (o log em LittleFS depende da partição). Os .h/.cpp da pasta
+   abrem como abas e são compilados junto.
+2. Copie estufa_v14/secrets.example.h para estufa_v14/secrets.h e preencha Wi-Fi, OTA e
+   MQTT. O secrets.h está no .gitignore; sem ele a compilação para com um erro explicando
+   o que falta.
+3. Bibliotecas: OneWire, DallasTemperature, RTClib, PubSubClient (as demais vêm com o core ESP32).
+
+Organização do código
+---------------------
+
+- estufa_v14.ino: setup(), loop() e watchdog
+- config.h: inclui o secrets.h e define porta MQTT, usuário e identificador do dispositivo
+- hora.*: RTC DS3231, NTP e fotoperíodo (dia/noite)
+- rede.*: conexão Wi-Fi e reconexão
+- sensores.*: temperatura (DS18B20) e umidade do solo (sensores capacitivos)
+- atuadores.*: relés: estado, modo auto/manual e escrita nos pinos
+- parametros.*: setpoints e parâmetros ajustáveis pelo painel local e pela nuvem
+- controle.*: decisões automáticas, ciclo de circulação e supervisão do aquecedor
+- irrigacao.*: doses por zona, agendamento, limiar, proteção das válvulas e estado gravado em /irrig.txt
+- janela.*: janela de medição: desliga as cargas, mede a umidade de controle e restaura
+- armazenamento.*: log CSV no LittleFS: um arquivo por dia, retenção e limpeza
+- configuracao.*: parâmetros em JSON e persistência em /config.json
+- mqtt.*: MQTT/TLS: publicação, reenvio do backlog, config/set e comando/set
+- web.*: painel HTTP local e suas rotas
+
+Cada variável compartilhada é definida em um .cpp e declarada extern no .h do módulo.
+Função nova usada em outro arquivo precisa do protótipo no .h (o Arduino só gera protótipos
+automaticamente para o .ino).
+
+Conexão com a VM
+----------------
+
+- Broker: IP público da VM (MQTT_HOST no secrets.h), porta 8883, TLS.
+- A CA própria (infra/mosquitto/certs/ca.crt) está colada em mqtt.cpp (CA_CERT). O
+  certificado da CA é público; as chaves *.key nunca saem da VM.
+- Usuário esp32, com a senha definida no make passwd. A ACL (infra/mosquitto/acl) só deixa
+  esse usuário publicar telemetria/evento/online/config-state e ler config/set e comando/set.
+- Publicação em QoS 0 com store-and-forward: cada linha é gravada no CSV do LittleFS e publicada
+  (mesmo que a gravação falhe); se a conexão cai, o ESP32 republica o que faltou a partir da
+  marca d'água quando volta.
+
+Reinícios, irrigação e log local
+--------------------------------
+
+- Arquivos no LittleFS: /config.json (parâmetros), /mqttwm.txt (marca d'água do MQTT),
+  /irrig.txt (agendamento e dose em curso) e /log/AAAAMMDD.csv (log, um arquivo por dia).
+  No primeiro boot desta versão, o log de arquivo único (/log.csv) é movido para /log/.
+- Agendamento: a hora da última dose de cada zona fica em /irrig.txt, e a contagem do
+  intervalo continua depois de um reinício. Sem o arquivo (primeiro boot), vale a última dose
+  registrada no log. Sem hora válida (RTC e NTP falhando), a contagem recomeça no boot.
+- Dose interrompida: o tempo já entregue é gravado a cada 5 s. No boot, a válvula reabre pelo
+  tempo que faltou (evento dose_retomada, origem retomada); depois de duas retomadas da mesma
+  dose, ela é dada por encerrada (dose_abandonada). O intervalo seguinte conta a partir do
+  início da dose original.
+- Doses automáticas saem uma zona de cada vez e nunca durante a janela de medição.
+- Log: ficam no máximo LOG_DIAS_MAX arquivos diários (3, contando o de hoje) e 900 kB no total
+  (armazenamento.cpp). Na virada do dia o mais antigo é apagado (log_apagado, ou
+  log_descartado se ainda não tinha chegado à VM). Se uma gravação falhar com a partição acima
+  de 90%, o arquivo mais antigo é apagado e a gravação é repetida. Para guardar mais dias, aumente
+  LOG_DIAS_MAX (cerca de 35 kB por dia).
+- O download do painel local ("Baixar CSV") junta os arquivos em ordem, com um cabeçalho só.
+- Watchdog: se o loop() ficar parado por mais de 120 s, o ESP32 reinicia.
